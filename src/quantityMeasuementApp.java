@@ -1,4 +1,5 @@
 import java.util.Scanner;
+
 class quantityMeasurementApp {
 
     public enum LengthUnit {
@@ -98,15 +99,29 @@ class quantityMeasurementApp {
             return targetUnit.fromInches(this.toInches());
         }
 
+        // UC6 behavior: result in first operand unit
         public QuantityLength add(QuantityLength other) {
             if (other == null) {
                 throw new IllegalArgumentException("Other quantity cannot be null");
             }
 
             double totalInches = this.toInches() + other.toInches();
-            double resultValueInFirstUnit = this.unit.fromInches(totalInches);
+            double resultValue = this.unit.fromInches(totalInches);
+            return new QuantityLength(resultValue, this.unit);
+        }
 
-            return new QuantityLength(resultValueInFirstUnit, this.unit);
+        // UC7 behavior: result in explicit target unit
+        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
+            if (other == null) {
+                throw new IllegalArgumentException("Other quantity cannot be null");
+            }
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
+
+            double totalInches = this.toInches() + other.toInches();
+            double resultValue = targetUnit.fromInches(totalInches);
+            return new QuantityLength(resultValue, targetUnit);
         }
 
         public static QuantityLength add(QuantityLength first, QuantityLength second) {
@@ -114,6 +129,16 @@ class quantityMeasurementApp {
                 throw new IllegalArgumentException("Both quantities must be non-null");
             }
             return first.add(second);
+        }
+
+        public static QuantityLength add(QuantityLength first, QuantityLength second, LengthUnit targetUnit) {
+            if (first == null || second == null) {
+                throw new IllegalArgumentException("Both quantities must be non-null");
+            }
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
+            return first.add(second, targetUnit);
         }
 
         @Override
@@ -154,7 +179,11 @@ class quantityMeasurementApp {
             System.out.println("Enter second quantity:");
             QuantityLength q2 = readQuantity(scanner);
 
-            QuantityLength result = q1.add(q2);
+            System.out.println("Enter target unit:");
+            String targetUnitText = scanner.next();
+            LengthUnit targetUnit = LengthUnit.fromString(targetUnitText);
+
+            QuantityLength result = q1.add(q2, targetUnit);
 
             System.out.println("Result: " + result);
         } catch (Exception e) {
