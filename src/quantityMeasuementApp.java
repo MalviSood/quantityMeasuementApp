@@ -116,7 +116,7 @@ class quantityMeasurementApp {
                 System.out.println("Output: Not Equal (false)");
             }
         } catch (Exception e) {
-            System.out.println("Output: Not Equal (false)");
+            System.out.println("output: Not equal (false)");
         } finally {
             scanner.close();
         }
