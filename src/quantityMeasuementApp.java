@@ -1,14 +1,66 @@
-//package com.apps.quantitymeasurement;
-
 import java.util.Scanner;
 
- class quantityMeasurementApp {
+class quantityMeasurementApp {
 
-    public static class Feet {
+    // Step 1: Enum for supported length units with conversion factors to feet
+    public enum LengthUnit {
+        FEET(1.0),
+        INCHES(1.0 / 12.0);
+
+        private final double toFeetFactor;
+
+        LengthUnit(double toFeetFactor) {
+            this.toFeetFactor = toFeetFactor;
+        }
+
+        public double toFeet(double value) {
+            return value * toFeetFactor;
+        }
+
+        public static LengthUnit fromString(String unit) {
+            if (unit == null) {
+                throw new IllegalArgumentException("Unit cannot be null");
+            }
+
+            String normalized = unit.trim().toLowerCase();
+
+            switch (normalized) {
+                case "ft":
+                case "foot":
+                case "feet":
+                    return FEET;
+
+                case "in":
+                case "inch":
+                case "inches":
+                    return INCHES;
+
+                default:
+                    throw new IllegalArgumentException("Unsupported unit: " + unit);
+            }
+        }
+    }
+
+    // Step 2: Generic quantity class for length measurement
+    public static class QuantityLength {
         private final double value;
+        private final LengthUnit unit;
 
-        public Feet(double value) {
+        public QuantityLength(double value, LengthUnit unit) {
             this.value = value;
+            this.unit = unit;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public LengthUnit getUnit() {
+            return unit;
+        }
+
+        private double toFeet() {
+            return unit.toFeet(value);
         }
 
         @Override
@@ -17,46 +69,48 @@ import java.util.Scanner;
             if (obj == null) return false;
             if (getClass() != obj.getClass()) return false;
 
-            Feet other = (Feet) obj;
-            return Double.compare(this.value, other.value) == 0;
+            QuantityLength other = (QuantityLength) obj;
+            return Double.compare(this.toFeet(), other.toFeet()) == 0;
         }
 
         @Override
         public int hashCode() {
-            return Double.hashCode(value);
+            return Double.hashCode(toFeet());
+        }
+
+        @Override
+        public String toString() {
+            return "Quantity(" + value + ", \"" + unit.name().toLowerCase() + "\")";
         }
     }
 
-    public static void main(String[] args) {
+    // Helper to parse input like: 1.0 feet
+    public static QuantityLength readQuantity(Scanner scanner) {
+        double value = scanner.nextDouble();
+        String unitText = scanner.next();
+        LengthUnit unit = LengthUnit.fromString(unitText);
+        return new QuantityLength(value, unit);
+    }
 
+    public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            // Ask input in required format
-            String input = scanner.nextLine(); // Example: "1.0 ft and 1.0 ft"
+            // Example user input:
+            // 1.0 feet
+            // 12.0 inches
+            QuantityLength q1 = readQuantity(scanner);
+            QuantityLength q2 = readQuantity(scanner);
 
-            // Extract values
-            String[] parts = input.split(" ");
-
-            double value1 = Double.parseDouble(parts[0]);
-            double value2 = Double.parseDouble(parts[3]);
-
-            Feet feet1 = new Feet(value1);
-            Feet feet2 = new Feet(value2);
-
-            boolean result = feet1.equals(feet2);
-
-            // Required output format
-            if (result) {
+            if (q1.equals(q2)) {
                 System.out.println("Output: Equal (true)");
             } else {
                 System.out.println("Output: Not Equal (false)");
             }
-
         } catch (Exception e) {
             System.out.println("Output: Not Equal (false)");
+        } finally {
+            scanner.close();
         }
-
-        scanner.close();
     }
 }
