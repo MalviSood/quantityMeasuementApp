@@ -1,67 +1,5 @@
 import java.util.Scanner;
-
 class quantityMeasurementApp {
-
-    public enum LengthUnit {
-        FEET(12.0),
-        INCHES(1.0),
-        YARDS(36.0),
-        CENTIMETERS(1.0 / 2.54);
-
-        private final double toInchesFactor;
-
-        LengthUnit(double toInchesFactor) {
-            this.toInchesFactor = toInchesFactor;
-        }
-
-        public double toInches(double value) {
-            if (!Double.isFinite(value)) {
-                throw new IllegalArgumentException("Value must be a finite number");
-            }
-            return value * toInchesFactor;
-        }
-
-        public double fromInches(double inchesValue) {
-            if (!Double.isFinite(inchesValue)) {
-                throw new IllegalArgumentException("Value must be a finite number");
-            }
-            return inchesValue / toInchesFactor;
-        }
-
-        public static LengthUnit fromString(String unit) {
-            if (unit == null) {
-                throw new IllegalArgumentException("Unit cannot be null");
-            }
-
-            String normalized = unit.trim().toLowerCase();
-
-            switch (normalized) {
-                case "ft":
-                case "foot":
-                case "feet":
-                    return FEET;
-
-                case "in":
-                case "inch":
-                case "inches":
-                    return INCHES;
-
-                case "yd":
-                case "yard":
-                case "yards":
-                    return YARDS;
-
-                case "cm":
-                case "cms":
-                case "centimeter":
-                case "centimeters":
-                    return CENTIMETERS;
-
-                default:
-                    throw new IllegalArgumentException("Unsupported unit: " + unit);
-            }
-        }
-    }
 
     public static class QuantityLength {
         private final double value;
@@ -88,29 +26,29 @@ class quantityMeasurementApp {
             return unit;
         }
 
-        private double toInches() {
-            return unit.toInches(value);
+        private double toBaseUnit() {
+            return unit.convertToBaseUnit(value);
         }
 
         public double convertTo(LengthUnit targetUnit) {
             if (targetUnit == null) {
                 throw new IllegalArgumentException("Target unit cannot be null");
             }
-            return targetUnit.fromInches(this.toInches());
+
+            double baseValue = this.toBaseUnit();
+            return targetUnit.convertFromBaseUnit(baseValue);
         }
 
-        // UC6 behavior: result in first operand unit
         public QuantityLength add(QuantityLength other) {
             if (other == null) {
                 throw new IllegalArgumentException("Other quantity cannot be null");
             }
 
-            double totalInches = this.toInches() + other.toInches();
-            double resultValue = this.unit.fromInches(totalInches);
+            double sumBase = this.toBaseUnit() + other.toBaseUnit();
+            double resultValue = this.unit.convertFromBaseUnit(sumBase);
             return new QuantityLength(resultValue, this.unit);
         }
 
-        // UC7 behavior: result in explicit target unit
         public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
             if (other == null) {
                 throw new IllegalArgumentException("Other quantity cannot be null");
@@ -119,8 +57,8 @@ class quantityMeasurementApp {
                 throw new IllegalArgumentException("Target unit cannot be null");
             }
 
-            double totalInches = this.toInches() + other.toInches();
-            double resultValue = targetUnit.fromInches(totalInches);
+            double sumBase = this.toBaseUnit() + other.toBaseUnit();
+            double resultValue = targetUnit.convertFromBaseUnit(sumBase);
             return new QuantityLength(resultValue, targetUnit);
         }
 
@@ -147,12 +85,12 @@ class quantityMeasurementApp {
             if (obj == null || getClass() != obj.getClass()) return false;
 
             QuantityLength other = (QuantityLength) obj;
-            return Math.abs(this.toInches() - other.toInches()) < EPSILON;
+            return Math.abs(this.toBaseUnit() - other.toBaseUnit()) < EPSILON;
         }
 
         @Override
         public int hashCode() {
-            long rounded = Math.round(toInches() * 1_000_000);
+            long rounded = Math.round(toBaseUnit() * 1_000_000);
             return Long.hashCode(rounded);
         }
 
