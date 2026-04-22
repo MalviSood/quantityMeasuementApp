@@ -15,6 +15,9 @@ class quantityMeasurementApp {
         }
 
         public double toInches(double value) {
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Value must be a finite number");
+            }
             return value * toInchesFactor;
         }
 
@@ -59,6 +62,13 @@ class quantityMeasurementApp {
         private static final double EPSILON = 1e-6;
 
         public QuantityLength(double value, LengthUnit unit) {
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Value must be a finite number");
+            }
+            if (unit == null) {
+                throw new IllegalArgumentException("Unit cannot be null");
+            }
+
             this.value = value;
             this.unit = unit;
         }
@@ -73,6 +83,26 @@ class quantityMeasurementApp {
 
         private double toInches() {
             return unit.toInches(value);
+        }
+
+        public double convertTo(LengthUnit targetUnit) {
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
+            double inchesValue = this.toInches();
+            return inchesValue / targetUnit.toInches(1.0);
+        }
+
+        public static double convert(double value, LengthUnit sourceUnit, LengthUnit targetUnit) {
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Value must be a finite number");
+            }
+            if (sourceUnit == null || targetUnit == null) {
+                throw new IllegalArgumentException("Source and target units cannot be null");
+            }
+
+            double inchesValue = sourceUnit.toInches(value);
+            return inchesValue / targetUnit.toInches(1.0);
         }
 
         @Override
@@ -107,16 +137,18 @@ class quantityMeasurementApp {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            QuantityLength q1 = readQuantity(scanner);
-            QuantityLength q2 = readQuantity(scanner);
+            System.out.println("Enter source quantity:");
+            QuantityLength source = readQuantity(scanner);
 
-            if (q1.equals(q2)) {
-                System.out.println("Output: Equal (true)");
-            } else {
-                System.out.println("Output: Not Equal (false)");
-            }
+            System.out.println("Enter target unit:");
+            String targetUnitText = scanner.next();
+            LengthUnit targetUnit = LengthUnit.fromString(targetUnitText);
+
+            double convertedValue = source.convertTo(targetUnit);
+
+            System.out.println("Converted Value: " + convertedValue + " " + targetUnit.name().toLowerCase());
         } catch (Exception e) {
-            System.out.println("Output: Not Equal (false)");
+            System.out.println("Invalid input");
         } finally {
             scanner.close();
         }
