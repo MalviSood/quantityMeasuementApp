@@ -2,19 +2,20 @@ import java.util.Scanner;
 
 class quantityMeasurementApp {
 
-    // Step 1: Enum for supported length units with conversion factors to feet
     public enum LengthUnit {
-        FEET(1.0),
-        INCHES(1.0 / 12.0);
+        FEET(12.0),
+        INCHES(1.0),
+        YARDS(36.0),
+        CENTIMETERS(1.0 / 2.54);
 
-        private final double toFeetFactor;
+        private final double toInchesFactor;
 
-        LengthUnit(double toFeetFactor) {
-            this.toFeetFactor = toFeetFactor;
+        LengthUnit(double toInchesFactor) {
+            this.toInchesFactor = toInchesFactor;
         }
 
-        public double toFeet(double value) {
-            return value * toFeetFactor;
+        public double toInches(double value) {
+            return value * toInchesFactor;
         }
 
         public static LengthUnit fromString(String unit) {
@@ -35,16 +36,27 @@ class quantityMeasurementApp {
                 case "inches":
                     return INCHES;
 
+                case "yd":
+                case "yard":
+                case "yards":
+                    return YARDS;
+
+                case "cm":
+                case "cms":
+                case "centimeter":
+                case "centimeters":
+                    return CENTIMETERS;
+
                 default:
                     throw new IllegalArgumentException("Unsupported unit: " + unit);
             }
         }
     }
 
-    // Step 2: Generic quantity class for length measurement
     public static class QuantityLength {
         private final double value;
         private final LengthUnit unit;
+        private static final double EPSILON = 1e-6;
 
         public QuantityLength(double value, LengthUnit unit) {
             this.value = value;
@@ -59,23 +71,23 @@ class quantityMeasurementApp {
             return unit;
         }
 
-        private double toFeet() {
-            return unit.toFeet(value);
+        private double toInches() {
+            return unit.toInches(value);
         }
 
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
+            if (obj == null || getClass() != obj.getClass()) return false;
 
             QuantityLength other = (QuantityLength) obj;
-            return Double.compare(this.toFeet(), other.toFeet()) == 0;
+            return Math.abs(this.toInches() - other.toInches()) < EPSILON;
         }
 
         @Override
         public int hashCode() {
-            return Double.hashCode(toFeet());
+            long rounded = Math.round(toInches() * 1_000_000);
+            return Long.hashCode(rounded);
         }
 
         @Override
@@ -84,7 +96,6 @@ class quantityMeasurementApp {
         }
     }
 
-    // Helper to parse input like: 1.0 feet
     public static QuantityLength readQuantity(Scanner scanner) {
         double value = scanner.nextDouble();
         String unitText = scanner.next();
@@ -96,9 +107,6 @@ class quantityMeasurementApp {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            // Example user input:
-            // 1.0 feet
-            // 12.0 inches
             QuantityLength q1 = readQuantity(scanner);
             QuantityLength q2 = readQuantity(scanner);
 
