@@ -1,5 +1,4 @@
 import java.util.Scanner;
-
 class quantityMeasurementApp {
 
     public enum LengthUnit {
@@ -19,6 +18,13 @@ class quantityMeasurementApp {
                 throw new IllegalArgumentException("Value must be a finite number");
             }
             return value * toInchesFactor;
+        }
+
+        public double fromInches(double inchesValue) {
+            if (!Double.isFinite(inchesValue)) {
+                throw new IllegalArgumentException("Value must be a finite number");
+            }
+            return inchesValue / toInchesFactor;
         }
 
         public static LengthUnit fromString(String unit) {
@@ -89,20 +95,25 @@ class quantityMeasurementApp {
             if (targetUnit == null) {
                 throw new IllegalArgumentException("Target unit cannot be null");
             }
-            double inchesValue = this.toInches();
-            return inchesValue / targetUnit.toInches(1.0);
+            return targetUnit.fromInches(this.toInches());
         }
 
-        public static double convert(double value, LengthUnit sourceUnit, LengthUnit targetUnit) {
-            if (!Double.isFinite(value)) {
-                throw new IllegalArgumentException("Value must be a finite number");
-            }
-            if (sourceUnit == null || targetUnit == null) {
-                throw new IllegalArgumentException("Source and target units cannot be null");
+        public QuantityLength add(QuantityLength other) {
+            if (other == null) {
+                throw new IllegalArgumentException("Other quantity cannot be null");
             }
 
-            double inchesValue = sourceUnit.toInches(value);
-            return inchesValue / targetUnit.toInches(1.0);
+            double totalInches = this.toInches() + other.toInches();
+            double resultValueInFirstUnit = this.unit.fromInches(totalInches);
+
+            return new QuantityLength(resultValueInFirstUnit, this.unit);
+        }
+
+        public static QuantityLength add(QuantityLength first, QuantityLength second) {
+            if (first == null || second == null) {
+                throw new IllegalArgumentException("Both quantities must be non-null");
+            }
+            return first.add(second);
         }
 
         @Override
@@ -137,16 +148,15 @@ class quantityMeasurementApp {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            System.out.println("Enter source quantity:");
-            QuantityLength source = readQuantity(scanner);
+            System.out.println("Enter first quantity:");
+            QuantityLength q1 = readQuantity(scanner);
 
-            System.out.println("Enter target unit:");
-            String targetUnitText = scanner.next();
-            LengthUnit targetUnit = LengthUnit.fromString(targetUnitText);
+            System.out.println("Enter second quantity:");
+            QuantityLength q2 = readQuantity(scanner);
 
-            double convertedValue = source.convertTo(targetUnit);
+            QuantityLength result = q1.add(q2);
 
-            System.out.println("Converted Value: " + convertedValue + " " + targetUnit.name().toLowerCase());
+            System.out.println("Result: " + result);
         } catch (Exception e) {
             System.out.println("Invalid input");
         } finally {
